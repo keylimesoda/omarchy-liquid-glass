@@ -1,0 +1,517 @@
+{
+  "sections": [
+    {
+      "title": "Thick glass rim",
+      "rows": [
+        [
+          "edge_thickness",
+          "Rim width",
+          "How wide the thick glass edge is (share of the window size)"
+        ],
+        [
+          "refraction_strength",
+          "Edge bend",
+          "How hard it bends at the edges. Below 0 bends outward"
+        ],
+        [
+          "chromatic_aberration",
+          "Rainbow fringe",
+          "Colour split where the glass bends"
+        ],
+        [
+          "fresnel_strength",
+          "Edge glow",
+          "Light caught all around the rim"
+        ],
+        [
+          "specular_strength",
+          "Top highlight",
+          "Shine along the top of the rim"
+        ]
+      ]
+    },
+    {
+      "title": "Edge shape",
+      "edge": true,
+      "rows": [
+        [
+          "refraction_spread",
+          "Bend depth",
+          "1 = bends across the whole window, 0 = only a rim with a flat middle"
+        ],
+        [
+          "refraction_flow",
+          "Bend along edges",
+          "0 = pulls toward the middle, 1 = slides along the edges"
+        ],
+        [
+          "fresnel_tint",
+          "Edge glow colour",
+          "0 = white, 1 = picks up the colours behind the glass"
+        ],
+        [
+          "specular_angle",
+          "Highlight direction",
+          "Where the top highlight comes from: 0 top, 90 right, 180 bottom, 270 left"
+        ],
+        [
+          "self_sample",
+          "Own text in the glass",
+          "Mixes the terminal's own content into the glass behind it. 0 = off"
+        ]
+      ]
+    },
+    {
+      "title": "Glass edge line",
+      "edge": true,
+      "rows": [
+        [
+          "bevel_strength",
+          "Line",
+          "A thin lit line along the glass edge. 0 = none"
+        ],
+        [
+          "bevel_size",
+          "Thickness",
+          "px"
+        ],
+        [
+          "bevel_angle",
+          "Light direction",
+          "0 top, 90 right, 180 bottom, 270 left"
+        ],
+        [
+          "bevel_shadow",
+          "Shadow side",
+          "Darker on the side away from the light"
+        ],
+        [
+          "bevel_tint",
+          "Colour from behind",
+          "0 = its own colour, 1 = the colours behind the glass"
+        ]
+      ],
+      "extra": [
+        "bevel_color",
+        "Line colour"
+      ]
+    },
+    {
+      "title": "Glass body",
+      "rows": [
+        [
+          "lens_distortion",
+          "Lens dome",
+          "Magnifies the middle like a lens"
+        ]
+      ]
+    },
+    {
+      "title": "Blur",
+      "rows": [
+        [
+          "blur_strength",
+          "Blur",
+          "Less blur makes the bending easier to see"
+        ],
+        [
+          "blur_iterations",
+          "Blur passes",
+          "Smoothness of the blur"
+        ]
+      ]
+    },
+    {
+      "title": "Tone",
+      "rows": [
+        [
+          "brightness",
+          "Brightness",
+          ""
+        ],
+        [
+          "contrast",
+          "Contrast",
+          ""
+        ],
+        [
+          "adaptive_dim",
+          "Dim bright spots",
+          "Keeps text readable over bright wallpaper"
+        ],
+        [
+          "adaptive_boost",
+          "Lift dark spots",
+          "Milky glass over dark wallpaper"
+        ]
+      ]
+    },
+    {
+      "title": "Colour",
+      "rows": [
+        [
+          "saturation",
+          "Saturation",
+          "Colour of the wallpaper through the glass"
+        ],
+        [
+          "vibrancy",
+          "Vibrancy",
+          "Extra pop for colourful areas"
+        ],
+        [
+          "vibrancy_darkness",
+          "Vibrancy in shadows",
+          ""
+        ],
+        [
+          "tint_strength",
+          "Tint strength",
+          "How much of the tint colour is mixed in"
+        ],
+        [
+          "glass_opacity",
+          "Glass amount",
+          "Overall strength of the whole effect"
+        ]
+      ],
+      "extra": [
+        "tint",
+        "Tint colour"
+      ]
+    },
+    {
+      "title": "Text",
+      "rows": [
+        [
+          "text_boost",
+          "Text brightness",
+          "Brightens your theme's own text colour toward white, so it still follows theme changes. 0 = exactly the theme colour. Updates open terminals"
+        ]
+      ],
+      "choices": [
+        [
+          "font_weight",
+          "Font weight",
+          [
+            "regular",
+            "medium",
+            "semibold",
+            "bold"
+          ],
+          "Heavier letters hold up better on glass. New terminals, after Save"
+        ]
+      ],
+      "toggles": [
+        [
+          "bold_bright",
+          "Bold text in bright colours (new terminals, after Save)"
+        ]
+      ]
+    },
+    {
+      "title": "Window look",
+      "rows": [
+        [
+          "foot_alpha",
+          "Terminal background",
+          "0 = pure glass, 1 = solid black (updates open terminals)"
+        ],
+        [
+          "foot_pad",
+          "Text padding",
+          "Space between text and the window edge, so text stays off the rim. Applies to new terminals after Save; the test window button uses it"
+        ],
+        [
+          "rounding",
+          "Corner rounding",
+          ""
+        ],
+        [
+          "gaps_in",
+          "Gap between windows",
+          ""
+        ],
+        [
+          "gaps_out",
+          "Gap to screen edge",
+          ""
+        ]
+      ],
+      "toggles": [
+        [
+          "shadow",
+          "Shadows"
+        ]
+      ]
+    },
+    {
+      "title": "Outer line (flat border)",
+      "rows": [
+        [
+          "border_size",
+          "Line thickness",
+          "A thin lit lip outside the glass. 0 = none"
+        ],
+        [
+          "rim_lit",
+          "Lit corner",
+          "Brightness where the light hits"
+        ],
+        [
+          "rim_side",
+          "Sides",
+          "Brightness along the edges in between"
+        ],
+        [
+          "rim_far",
+          "Far corner",
+          "Soft reflection on the opposite corner"
+        ],
+        [
+          "rim_angle",
+          "Light direction",
+          "45 top-left, 135 top-right, 225 bottom-right, 315 bottom-left"
+        ],
+        [
+          "rim_inactive",
+          "Unfocused windows",
+          "How much rim unfocused windows keep"
+        ]
+      ],
+      "extra": [
+        "rim_color",
+        "Rim colour"
+      ],
+      "toggles": [
+        [
+          "glass_border",
+          "Lit white line (off = neon gradient)"
+        ],
+        [
+          "border_spin",
+          "Spin the light around"
+        ]
+      ]
+    },
+    {
+      "group": "Actions",
+      "light": true,
+      "rows": [
+        [
+          "light_lag",
+          "Cursor smoothing",
+          "Shared by Light and Parallax: seconds they take to catch up with your pointer. 0 = instant"
+        ]
+      ]
+    },
+    {
+      "title": "Light follows you",
+      "action": "light_on",
+      "light": true,
+      "rows": [
+        [
+          "light_strength",
+          "Light",
+          "Light added where the rim faces the light. 0 = no light, the glass still bends"
+        ],
+        [
+          "light_cursor",
+          "Follows cursor",
+          "How far the light leans toward your pointer"
+        ],
+        [
+          "light_x",
+          "Light left / right",
+          "Across all monitors: 0 = left edge, 1 = right edge"
+        ],
+        [
+          "light_y",
+          "Light height",
+          "0 = top of the screens, below 0 = above them. Closer = highlights move more"
+        ],
+        [
+          "light_sharpness",
+          "Highlight focus",
+          "Higher = a tighter, shinier highlight"
+        ],
+        [
+          "light_width",
+          "Depth",
+          "How far into the glass the rim light reaches, px"
+        ],
+        [
+          "light_far",
+          "Back reflection",
+          "Soft light on the side facing away"
+        ],
+        [
+          "light_bend",
+          "Bend",
+          "How much the glass bends where it faces the light. 0 = light only"
+        ],
+        [
+          "light_inactive",
+          "Unfocused windows",
+          "How much light unfocused windows catch"
+        ]
+      ],
+      "extra": [
+        "light_color",
+        "Light colour"
+      ]
+    },
+    {
+      "title": "Parallax tilt",
+      "action": "parallax_on",
+      "light": true,
+      "rows": [
+        [
+          "parallax_strength",
+          "Tilt",
+          "How far the view behind the glass shifts as your pointer moves, px"
+        ],
+        [
+          "parallax_depth",
+          "Thickness",
+          "Extra shift toward the rim, so the glass reads as thick"
+        ]
+      ]
+    },
+    {
+      "title": "Oil film",
+      "action": "oil_on",
+      "light": true,
+      "rows": [
+        [
+          "oil_amount",
+          "Amount",
+          "Slow iridescent swirls on the glass, like oil on water"
+        ],
+        [
+          "oil_speed",
+          "Flow speed",
+          ""
+        ],
+        [
+          "oil_scale",
+          "Swirl size",
+          "px"
+        ],
+        [
+          "oil_color",
+          "Colour",
+          "0 = clear sheen, 1 = full rainbow film"
+        ],
+        [
+          "oil_warp",
+          "Ripple",
+          "How much the film ripples the view behind the glass"
+        ],
+        [
+          "oil_inactive",
+          "Unfocused windows",
+          "0 = only the focused window flows (lighter on the GPU)"
+        ],
+        [
+          "oil_fps",
+          "Smoothness",
+          "Redraws per second while it flows. Lower = lighter on the GPU"
+        ]
+      ]
+    },
+    {
+      "title": "Click glow",
+      "action": "glow_on",
+      "light": true,
+      "rows": [
+        [
+          "glow_strength",
+          "Light",
+          "Light that spreads from where you click. 0 = no light, the glass still flexes"
+        ],
+        [
+          "glow_duration",
+          "Duration",
+          "Seconds to spread and fade"
+        ],
+        [
+          "glow_spread",
+          "Spread",
+          "How far it travels (share of the window)"
+        ],
+        [
+          "glow_ring",
+          "Ring width",
+          "px"
+        ],
+        [
+          "glow_flex",
+          "Flex",
+          "How much the glass flexes as the ripple passes. 0 = light only"
+        ]
+      ]
+    },
+    {
+      "title": "Materialize",
+      "action": "materialize_on",
+      "light": true,
+      "rows": [
+        [
+          "materialize_duration",
+          "Duration",
+          "New windows appear by bending in, not fading. Seconds"
+        ]
+      ]
+    },
+    {
+      "title": "Drift",
+      "action": "drift_on",
+      "light": true,
+      "rows": [
+        [
+          "light_drift",
+          "Amount",
+          "The light slowly wanders on its own, so highlights creep round the rims"
+        ],
+        [
+          "light_drift_period",
+          "Time",
+          "Seconds for one slow wander"
+        ]
+      ]
+    }
+  ],
+  "apple": {
+    "blur_strength": 0.5,
+    "refraction_strength": 3,
+    "edge_thickness": 0.07,
+    "lens_distortion": 3,
+    "chromatic_aberration": 1,
+    "fresnel_strength": 2,
+    "specular_strength": 3,
+    "foot_alpha": 0.25,
+    "adaptive_dim": 0.3,
+    "foot_pad": 40,
+    "border_size": 1,
+    "rim_lit": 0.55,
+    "rim_side": 0.05,
+    "rim_far": 0.25
+  },
+  "integers": [
+    "specular_angle",
+    "bevel_angle",
+    "oil_scale",
+    "oil_fps",
+    "light_width",
+    "glow_ring",
+    "foot_pad",
+    "blur_iterations",
+    "tint_strength",
+    "rounding",
+    "gaps_in",
+    "gaps_out",
+    "border_size",
+    "rim_angle"
+  ]
+}

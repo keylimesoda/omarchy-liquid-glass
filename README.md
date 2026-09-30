@@ -1,5 +1,44 @@
 # Liquid Glass for Omarchy
 
+This fork preserves the working custom Hyprland installation and native Omarchy
+settings panel. Original project: [fasi96/omarchy-liquid-glass](https://github.com/fasi96/omarchy-liquid-glass).
+
+## Changes in this fork
+
+- Hosted Omarchy settings panel with native outside-click and Escape dismissal.
+- All settings sections start collapsed, with arrows and one open section at a time.
+- Master on/off switch that saves immediately while retaining other slider previews.
+- Turning glass off restores the configured Foot colors/opacity and the Hyprland
+  theme's borders, geometry and animations; saved glass tuning is retained.
+- Build and load the pinned glass plugin against a matching custom Hyprland source
+  tree when the running compositor differs from the system installation.
+- The browser tuner remains available explicitly with `tuner.py --browser`.
+
+The native panel requires Omarchy's hosted QML shell and its `Ui.KeyboardPanel`
+component. For a standalone script installation without the shell plugin enabled,
+use the browser fallback.
+
+Custom builds require an existing built Hyprland source tree, including generated
+headers, protocols and `build/hyprland.pc`, matching the running compositor. Set
+`LG_HYPRLAND_SOURCE` to that tree when running the installer. The current local
+fallback is `$HOME/Work/src/Hyprland-v0.56.2-liquid-glass`; it is specific to the
+machine this fork was tested on. Rebuilds started from the bar inherit the shell's
+environment, so keep the source at that fallback location or export the variable
+in the shell session. ABI validation prevents loading this binary after an
+incompatible Hyprland update. Custom dependencies must also match the running build.
+
+Install this fork with:
+
+```bash
+omarchy plugin add https://github.com/keylimesoda/omarchy-liquid-glass --enable
+```
+
+Validation: nine backend regression tests (`python3 tests/test_tuner.py`), shell
+script syntax checks, Omarchy plugin validation, and live panel/power tests on the
+custom Hyprland 0.56.2 build. Stock-Hyprland installation and full uninstall have
+not been re-tested with these changes. The original documentation below describes
+the upstream browser-first installation; the changes above take precedence here.
+
 Apple-style Liquid Glass for your terminal on [Omarchy](https://omarchy.org): thick glass edges that bend what's behind them, light that follows your cursor, parallax tilt, a slow oil-film shimmer, and windows that bend into existence, all tunable live with sliders.
 
 ![Liquid Glass on Omarchy](assets/demo.gif)

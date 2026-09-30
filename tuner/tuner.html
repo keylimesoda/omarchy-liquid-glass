@@ -11,7 +11,7 @@
   * { box-sizing: border-box; }
   html, body { margin: 0; background: var(--bg); color: var(--text);
     font: 13px/1.35 "JetBrainsMono Nerd Font", ui-monospace, monospace; }
-  body { padding: 14px 14px 160px; }
+  body { padding: 14px 14px 210px; }
   h1 { font-size: 15px; margin: 0 0 2px; letter-spacing: .02em; }
   .sub { color: var(--muted); margin-bottom: 12px; }
   section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
@@ -73,7 +73,7 @@
 </head>
 <body>
 <h1>Glass Tuner</h1>
-<div class="sub">Changes show live. Double-click a slider to reset it. Nothing is saved until you press Save.</div>
+<div class="sub">Changes show live. Double-click a slider to reset it. The glass switch saves immediately; press Save to keep other changes.</div>
 <section id="looks-box">
   <div class="head"><h2>Saved looks</h2><span class="dirty" id="dirty"></span></div>
   <div class="toggle"><select id="looks" style="flex:1"></select></div>
@@ -90,6 +90,7 @@
 <div id="ui"></div>
 
 <div class="bar">
+  <button class="compare" id="glass-power" role="switch" aria-checked="false" disabled>Loading Liquid Glass…</button>
   <button class="compare" id="compare">Hold to compare: glass off</button>
   <button class="compare" id="apple">Load Apple-ish starting point</button>
   <button id="test">Open test window</button>
@@ -154,7 +155,7 @@ const SECTIONS = [
     ['rounding', 'Corner rounding', ''],
     ['gaps_in', 'Gap between windows', ''],
     ['gaps_out', 'Gap to screen edge', ''],
-  ], toggles: [['glass_on', 'Liquid Glass on terminals'], ['shadow', 'Shadows']] },
+  ], toggles: [['shadow', 'Shadows']] },
   { title: 'Outer line (flat border)', rows: [
     ['border_size', 'Line thickness', 'A thin lit lip outside the glass. 0 = none'],
     ['rim_lit', 'Lit corner', 'Brightness where the light hits'],
@@ -226,6 +227,32 @@ function push() {
   timer = setTimeout(() => fetch('/apply', { method: 'POST', body: JSON.stringify({ state: S, compare }) }), 40);
 }
 
+function syncPower() {
+  const button = $('glass-power');
+  button.textContent = S.glass_on ? 'Turn Liquid Glass off' : 'Turn Liquid Glass on';
+  button.setAttribute('aria-checked', String(Boolean(S.glass_on)));
+}
+
+$('glass-power').onclick = async () => {
+  const button = $('glass-power');
+  button.disabled = true;
+  clearTimeout(timer);
+  try {
+    const enabled = !S.glass_on;
+    const response = await fetch('/power', { method: 'POST', body: JSON.stringify({ enabled, state: S }) });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Could not change Liquid Glass');
+    S.glass_on = SAVED.glass_on = result.enabled;
+    compare = false; cmp.classList.remove('held');
+    syncPower(); markDirty();
+    status(result.errors || `Liquid Glass ${result.enabled ? 'on' : 'off'} — saved`, result.errors ? 'err' : 'ok');
+  } catch (error) {
+    status(error.message, 'err');
+  } finally {
+    button.disabled = false;
+  }
+};
+
 function fmt(k, v) { return isInt(k) ? String(Math.round(v)) : Number(v).toFixed(k === 'edge_thickness' ? 3 : 2); }
 
 function sliderRow(k, label, hint) {
@@ -286,6 +313,7 @@ function revertButton(sec, label) {
 }
 
 function build() {
+  syncPower();
   const ui = $('ui'); ui.innerHTML = '';
   const open = openSet();
   for (const sec of SECTIONS) {
@@ -393,6 +421,7 @@ async function load() {
   S = r.state; SAVED = { ...r.state }; META = r.meta; build();
   LOOKS = await (await fetch('/looks')).json();
   renderLooks(LOOKS.active || '');
+  syncPower(); $('glass-power').disabled = false;
 }
 
 const cmp = $('compare');

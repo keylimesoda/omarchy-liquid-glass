@@ -24,6 +24,19 @@ BarWidget {
   property bool installed: false
   property bool pluginLoaded: true
   property bool glassOn: true
+  readonly property bool opened: tunerPanel.opened
+  readonly property bool popoutSwitchClosing: tunerPanel.popoutSwitchClosing
+
+  function open(payloadJson) { tunerPanel.open(payloadJson) }
+  function close() { tunerPanel.close() }
+  function closeForPopoutSwitch() { tunerPanel.closeForPopoutSwitch() }
+
+  TunerPanel {
+    id: tunerPanel
+    bar: root.bar
+    anchorItem: button
+    hostWidget: root
+  }
 
   readonly property string mode: !installed ? "setup" : (!pluginLoaded ? "rebuild" : "ready")
 
@@ -77,9 +90,11 @@ BarWidget {
     } else if (mode === "rebuild") {
       terminal("cd " + q(repoDir) + " && ./install.sh --plugin-only && hyprctl reload")
     } else if (b === Qt.RightButton) {
-      Util.execArgv(["python3", tuner, "--toggle"])
+      if (root.opened && tunerPanel.ready) tunerPanel.setPower()
+      else Util.execArgv(["python3", tuner, "--toggle"])
     } else {
-      Util.execArgv(["python3", tuner])
+      if (root.opened) root.close()
+      else root.open("{}")
     }
   }
 
@@ -94,7 +109,12 @@ BarWidget {
 
   IpcHandler {
     target: "io.github.fasi96.liquid-glass"
-    function openTuner(): void { root.clicked(Qt.LeftButton) }
+    function openTuner(): void {
+      if (root.mode === "ready") root.open("{}")
+      else root.clicked(Qt.LeftButton)
+    }
+    function close(): void { root.close() }
+    function isOpen(): bool { return root.opened }
     function toggle(): void { if (root.mode === "ready") root.clicked(Qt.RightButton) }
   }
 

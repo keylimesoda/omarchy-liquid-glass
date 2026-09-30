@@ -37,6 +37,11 @@ done
 
 say() { printf '\033[1;36m==>\033[0m %s\n' "$*"; }
 
+# The custom build is loaded directly, with no hyprpm repository to remove.
+if [ -f "$CONF/native-plugin.sha256" ]; then
+    hyprctl plugin unload "$DEST/hyprglass.so" || true
+fi
+
 BLOCKS_PY="$HERE/lib/blocks.py"; [ -f "$BLOCKS_PY" ] || BLOCKS_PY="$DEST/lib/blocks.py"
 KEPT=()
 # remove our fenced block, but only if it is still exactly what Liquid Glass wrote
@@ -137,7 +142,7 @@ elif [ -f "$st" ]; then
     say "left hyprpm's HyprGlassLiquid alone: Liquid Glass didn't install it (source: ${url:-unknown})."
     say "if you want it gone too: hyprpm remove HyprGlassLiquid"
 fi
-rm -f "$CONF/hyprpm-repo" "$MANIFEST" "$GENERATED" "$CONF/plugin-rev"   # bookkeeping for the steps above
+rm -f "$CONF/hyprpm-repo" "$MANIFEST" "$GENERATED" "$CONF/plugin-rev" "$CONF/native-plugin.sha256"
 [ -s "$CONF/blocks.sha256" ] || rm -f "$CONF/blocks.sha256"                  # still lists any block you kept
 
 if [ ${#KEPT[@]} -gt 0 ]; then

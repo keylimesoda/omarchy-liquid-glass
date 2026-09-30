@@ -96,6 +96,24 @@ done
 for c in hyprctl hyprpm python3 jq git sha256sum; do
     command -v "$c" >/dev/null || die "missing: $c"
 done
+# Select this session's binaries: /usr/bin/Hyprland may be the stock build.
+running_pid=$(hyprctl instances -j | jq -r --arg sig "${HYPRLAND_INSTANCE_SIGNATURE:-}" '.[] | select(.instance == $sig) | .pid')
+running_exe=$(readlink "/proc/$running_pid/exe" || true)
+HYPR_BIN=$(dirname "$running_exe")
+[ -x "$HYPR_BIN/Hyprland" ] || die "cannot locate the running Hyprland binary"
+export PATH="$HYPR_BIN:$PATH"
+[ "$(Hyprland --version-json | jq -r .abiHash)" = "$(hyprctl version -j | jq -r .abiHash)" ] \
+    || die "installed and running Hyprland differ; restart into the installed build first"
+# The local repository contains the user's dwindle patch, absent upstream.
+HYPRLAND_SOURCE="${LG_HYPRLAND_SOURCE:-$HOME/Work/src/Hyprland-v0.56.2-liquid-glass}"
+HYPR_UPDATE_ARGS=()
+CUSTOM_PLUGIN=""
+if [ -d "$HYPRLAND_SOURCE/.git" ]; then
+    if git -C "$HYPRLAND_SOURCE" cat-file -e "$(hyprctl version -j | jq -r .commit)^{commit}" 2>/dev/null; then
+        HYPR_UPDATE_ARGS=(--hl-url "$HYPRLAND_SOURCE")
+        [ "$HYPR_BIN" = /usr/bin ] || CUSTOM_PLUGIN=1
+    fi
+fi
 [ -n "${LG_PLUGIN_ONLY:-}" ] || for c in chromium foot; do command -v "$c" >/dev/null || die "missing: $c"; done
 [ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ] || die "run this inside your Hyprland session"
 [ -d "${OMARCHY_PATH:-/usr/share/omarchy}" ] || warn "Omarchy not found: the config hooks assume Omarchy's layout (~/.config/hypr/*.lua with the o helper)"
@@ -118,7 +136,10 @@ summary() {
     echo
     echo "Liquid Glass will:"
     [ ${#MISSING_PKGS[@]} -gt 0 ] && echo "  - install build tools with sudo: pacman -S --needed ${MISSING_PKGS[*]}"
-    [ -z "${LG_SKIP_PLUGIN:-}" ] && echo "  - build HyprGlass Liquid ${HYPRGLASS_REV:0:12} with hyprpm and load it (asks for your password)"
+    if [ -z "${LG_SKIP_PLUGIN:-}" ]; then
+        if [ -n "$CUSTOM_PLUGIN" ]; then echo "  - build HyprGlass Liquid ${HYPRGLASS_REV:0:12} locally against your custom Hyprland and load it"
+        else echo "  - build HyprGlass Liquid ${HYPRGLASS_REV:0:12} with hyprpm and load it (asks for your password)"; fi
+    fi
     if [ -z "${LG_PLUGIN_ONLY:-}" ]; then
         echo "  - write ~/.config/hypr/liquid_glass.lua, and add fenced blocks to hyprland.lua, autostart.lua and bindings.lua"
         echo "  - add a fenced block at the end of ~/.config/foot/foot.ini (your own lines are not edited)"
@@ -194,8 +215,8 @@ decide_glass_repos() {
 NEED_HEADERS=""
 decide_headers() {
     local running have others st name r skip
-    running=$(hyprctl version -j | jq -r .commit)
-    have=$(sed -n "s/^hash = '\([0-9a-f]*\).*/\1/p" "$HYPRPM_DIR/state.toml" 2>/dev/null || true)
+    running=$(hyprctl version -j | jq -r .abiHash)
+    have=$(state_val hash "$HYPRPM_DIR/state.toml")
     if [ -n "$running" ] && [ "$have" = "$running" ]; then say "hyprpm headers already match this Hyprland"; return; fi
     NEED_HEADERS=1
     others=""
@@ -227,7 +248,9 @@ restore_removed() {
 plugin_step() {
     # decide about other hyprglass installs before touching anything
     decide_glass_repos
-    decide_headers
+    if [ -n "$CUSTOM_PLUGIN" ]; then
+        [ ${#REMOVE_REPOS[@]} -eq 0 ] || die "a hyprpm glass build already exists; disable/remove it before using a local custom build"
+    else decide_headers; fi
 
     if [ ${#MISSING_PKGS[@]} -gt 0 ]; then
         say "installing build tools: ${MISSING_PKGS[*]} (sudo)"
@@ -254,12 +277,36 @@ plugin_step() {
     git -C "$PLUGIN_SRC" fsck --no-progress --no-dangling >/dev/null || die "fetched source failed git fsck"
     echo "$HYPRGLASS_REV" > "$CONF/plugin-rev"      # the source is ours only while it is still exactly this
 
+    if [ -n "$CUSTOM_PLUGIN" ]; then
+        say "building against your custom Hyprland source (user-local install)"
+        guard "$DEST/hyprglass.so" "$DEST/hyprglass.abi"
+        python3 "$SRC/lib/custom-build.py" "$HYPRLAND_SOURCE" "$PLUGIN_SRC" "$DEST/hyprglass.so" "$(hyprctl version -j | jq -r .abiHash)"
+        # On rebuild, unload only our previous local build before replacing it.
+        if [ -f "$CONF/native-plugin.sha256" ]; then
+            hyprctl plugin unload "$DEST/hyprglass.so" || true
+        fi
+        hyprctl plugin load "$DEST/hyprglass.so"
+        hyprctl getoption plugin:hyprglass:light_strength | grep -q '^float:' || die "custom plugin failed to load"
+        sha256sum "$DEST/hyprglass.so" "$DEST/hyprglass.abi" > "$CONF/native-plugin.sha256"
+        if [ -f "$MANIFEST" ]; then
+            python3 - "$MANIFEST" "$CONF/native-plugin.sha256" "$DEST/hyprglass.so" "$DEST/hyprglass.abi" <<'PY'
+from pathlib import Path
+import sys
+manifest, native = map(Path, sys.argv[1:3])
+paths = set(sys.argv[3:])
+lines = [line for line in manifest.read_text().splitlines() if line[66:] not in paths]
+manifest.write_text("\n".join(lines) + "\n" + native.read_text())
+PY
+        fi
+        return
+    fi
+
     local entry
     for entry in "${REMOVE_REPOS[@]}"; do say "hyprpm: removing ${entry%%$'\t'*}"; hyprpm remove "${entry%%$'\t'*}"; done
 
     if [ -n "$NEED_HEADERS" ]; then
         say "hyprpm: fetching Hyprland headers (can take a few minutes)"
-        hyprpm update || { restore_removed; die "hyprpm update failed"; }
+        hyprpm update "${HYPR_UPDATE_ARGS[@]}" || { restore_removed; die "hyprpm update failed"; }
     fi
 
     say "hyprpm: building HyprGlass Liquid ${HYPRGLASS_REV:0:12}"
@@ -277,7 +324,8 @@ fi
 # ---------------------------------------------------------------- files
 say "installing Glass Tuner"
 mkdir -p "$DEST/tuner" "$DEST/lib" "$CONF"
-TUNER_FILES=(tuner/tuner.py tuner/tuner.html lib/blocks.py defaults.json uninstall.sh)
+TUNER_FILES=(tuner/tuner.py tuner/tuner.html tuner/controls.json lib/blocks.py defaults.json uninstall.sh)
+if [ -n "$CUSTOM_PLUGIN" ]; then TUNER_FILES+=(lib/load-custom-plugin.sh); fi
 for f in "${TUNER_FILES[@]}"; do guard "$DEST/$f"; install -m "$( [ "$f" = uninstall.sh ] && echo 755 || echo 644 )" "$SRC/$f" "$DEST/$f"; done
 [ -f "$CONF/state.json" ] || cp "$SRC/defaults.json" "$CONF/state.json"
 [ -f "$CONF/looks.json" ] || cp "$SRC/looks-default.json" "$CONF/looks.json"
@@ -314,8 +362,10 @@ python3 "$DEST/tuner/tuner.py" --save
 say "hooking into ~/.config/hypr"
 add_block "$HYPR/hyprland.lua" "--" '-- Liquid Glass: glass on terminals + the window look (generated by Glass Tuner)
 require("hypr.liquid_glass")'
-add_block "$HYPR/autostart.lua" "--" '-- load hyprpm plugins (HyprGlass Liquid), then re-read the config so liquid_glass.lua sees it
-o.launch_on_start("sh -c '"'"'hyprpm reload -n; hyprctl reload'"'"'")'
+autostart_command="env PATH=$(printf '%q' "$HYPR_BIN"):\$PATH sh -c 'hyprpm reload -n; hyprctl reload'"
+if [ -n "$CUSTOM_PLUGIN" ]; then autostart_command="bash $(printf '%q' "$DEST/lib/load-custom-plugin.sh")"; fi
+add_block "$HYPR/autostart.lua" "--" "-- load plugins with the binaries belonging to the custom Hyprland build
+ o.launch_on_start($(lua_str "$autostart_command"))"
 add_block "$HYPR/bindings.lua" "--" "o.bind(\"SUPER + CTRL + G\", \"Glass Tuner\", $(lua_str "python3 $(printf '%q' "$DEST/tuner/tuner.py")"))"
 
 # ---------------------------------------------------------------- hooks
@@ -329,6 +379,7 @@ chmod +x "$HOOK" "$FONT_HOOK"
 # record exactly what we installed, so uninstall.sh removes nothing else
 { for f in "${TUNER_FILES[@]}"; do echo "$DEST/$f"; done; echo "$DESKTOP"; echo "$HOOK"; echo "$FONT_HOOK"; } \
     | while IFS= read -r f; do [ -f "$f" ] && sha256sum "$f"; done > "$MANIFEST"
+[ -z "$CUSTOM_PLUGIN" ] || cat "$CONF/native-plugin.sha256" >> "$MANIFEST"
 
 errs=$(hyprctl configerrors || true)
 [ -z "$errs" ] || warn "Hyprland reports config errors:
